@@ -2,6 +2,8 @@ import os
 import pydicom
 import sys
 import glob
+import json
+from pathlib import Path
 
 
 def decompress_dicom_file(input_file, output_file, decoding_plugins, transfer_uid_to_plugin):
@@ -37,7 +39,7 @@ def decompress_dicom_file(input_file, output_file, decoding_plugins, transfer_ui
 
 def decompress_dicom_folder(input_folder, output_folder, decoding_plugins, transfer_uid_to_plugin):
    # Get all DICOM files in the input folder
-    dicom_files = glob.glob(os.path.join(input_folder, '*'))
+    dicom_files = glob.glob(os.path.join(input_folder, '*.dcm'))
 
     # Decompress each DICOM file
     for input_file in dicom_files:
@@ -50,11 +52,25 @@ if __name__ == "__main__":
         print("Usage: python main.py <input_folder> <output_folder>")
         sys.exit(1)
 
-    input_folder = sys.argv[1]
-    output_folder = sys.argv[2]
+    input_folder = Path(sys.argv[1])
+    output_folder = Path(sys.argv[2])
 
     decoding_plugins = ['gdcm', 'pylibjpeg', 'pydicom']
     transfer_uid_to_plugin = {}
+
+    # Check if the user provided plugins to use
+    try:
+        with open(input_folder / "task.json", "r") as json_file:
+            task = json.load(json_file)
+    except Exception:
+        print("Error: Task file task.json not found")
+        sys.exit(1)
+    # Overwrite default values with settings from the task file (if present)
+    val =  task.get("decoding_plugins", "")
+    if val and isinstance(val, str):
+        decoding_plugins = [val]
+    elif val and isinstance(val, list):
+        decoding_plugins = val
 
     decompress_dicom_folder(input_folder, output_folder, decoding_plugins, transfer_uid_to_plugin)
 
