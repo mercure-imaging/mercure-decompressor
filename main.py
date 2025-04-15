@@ -66,7 +66,8 @@ if __name__ == "__main__":
         print("Error: Task file task.json not found")
         sys.exit(1)
     # Overwrite default values with settings from the task file (if present)
-    val =  task.get("decoding_plugins", "")
+    settings =  task.get("process", "").get("settings", "")
+    val = settings.get("decoding_plugins", "")
     if val and isinstance(val, str):
         decoding_plugins = [val]
     elif val and isinstance(val, list):
